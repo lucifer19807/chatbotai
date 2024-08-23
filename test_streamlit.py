@@ -3,9 +3,11 @@ import google.generativeai as genai
 from PIL import Image
 import io
 from deep_translator import GoogleTranslator
+from groq import Groq
 
-api_key = "AIzaSyC57vVDUCQ94eRDFO8ntW67yyrxZXMLrgw"
-genai.configure(api_key=api_key)
+llama_client = Groq(api_key="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")
+
+genai.configure(api_key="AIzaSyC57vVDUCQ94eRDFO8ntW67yyrxZXMLrgw")
 model = genai.GenerativeModel("models/gemini-1.5-flash-latest")
 
 st.title('Disease Analysis Chatbot')
@@ -22,52 +24,81 @@ if st.button('Submit'):
     if uploaded_file is not None and user_query:
         image_data = uploaded_file.read()
 
-        analysis_request = {
+        
+        classification_request = {
             "parts": [
                 {
                     "inline_data": {
                         "mime_type": "image/jpeg",
                         "data": image_data
                     }
-                },
-                {
-                    "text": user_query,
-                    
                 }
             ]
         }
+        classification_response = model.generate_content(classification_request)
 
-        response = model.generate_content(analysis_request)
-
-        if hasattr(response, 'text'):
-            decoded_response = response.text.encode('utf-8').decode('unicode_escape')
-            
-            if language != "English":
-                try:
-                    language_codes = {
-                        "Hindi": "hi",
-                        "Bengali": "bn",
-                        "Telugu": "te",
-                        "Marathi": "mr",
-                        "Tamil": "ta",
-                        "Gujarati": "gu",
-                        "Urdu": "ur"
+        if "animal" in classification_response.text or "plant" in classification_response.text:
+            analysis_request = {
+                "parts": [
+                    {
+                        "inline_data": {
+                            "mime_type": "image/jpeg",
+                            "data": image_data
+                        }
+                    },
+                    {
+                        "text": user_query,
                     }
-                    translator = GoogleTranslator(source='en', target=language_codes[language])
-                    decoded_response = translator.translate(decoded_response)
-                except Exception as e:
-                    st.write(f"Translation error: {e}")
-            
-            st.session_state.conversation.append({
-                'user': user_query,
-                'response': decoded_response
-            })
-            
-            st.write("Conversation History:")
-            for i, conv in enumerate(st.session_state.conversation):
-                st.write(f"**User {i+1}**: {conv['user']}")
-                st.write(f"**Response {i+1}**: {conv['response']}")
+                ]
+            }
+
+            try:
+                response = model.generate_content(analysis_request)
+                chat_completion = llama_client.chat.completions.create(
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": response.text + " what should be done to prevent or eliminate this in the context of the farmer /n",
+                        }
+                    ],
+                    model="llama-3.1-70b-versatile",
+                )
+                value = chat_completion.choices[0].message.content
+
+                if hasattr(response, 'text'):
+                    decoded_response = response.text.encode('utf-8').decode('unicode_escape')
+                    value = value.encode('utf-8').decode('unicode_escape')
+                    if language != "English":
+                        try:
+                            language_codes = {
+                                "Hindi": "hi",
+                                "Bengali": "bn",
+                                "Telugu": "te",
+                                "Marathi": "mr",
+                                "Tamil": "ta",
+                                "Gujarati": "gu",
+                                "Urdu": "ur"
+                            }
+                            translator = GoogleTranslator(source='en', target=language_codes[language])
+                            decoded_response = translator.translate(decoded_response)
+                            value = translator.translate(value)
+                        except Exception as e:
+                            st.write(f"Translation error: {e}")
+
+                    st.session_state.conversation.append({
+                        'user': user_query,
+                        'response': decoded_response + "\n \n \n" + value
+                    })
+
+                    st.write("Conversation History:")
+                    for i, conv in enumerate(st.session_state.conversation[-5:]):
+                        st.write(f"**User {i+1}**: {conv['user']}")
+                        st.write(f"**Response {i+1}**: {conv['response']}")
+                else:
+                    st.write("Unable to get a valid response from the model.")
+            except Exception as e:
+                st.write(f"Error: {e}")
         else:
-            st.write("Unable to get a valid response from the model.")
+            st.write("Please upload an image of an animal or plant.")
     else:
         st.write("Please upload an image and enter a query.")
