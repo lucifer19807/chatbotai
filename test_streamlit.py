@@ -65,7 +65,7 @@ if st.button('Submit'):
                     messages=[
                         {
                             "role": "user",
-                            "content": response.text + " How can we help farmers prevent or eliminate this issue? Keep it concise for easy understanding.",
+                            "content": response.text + " use pointers, and  short lines ,How can we help farmers prevent or eliminate this issue? Keep it concise for easy understanding.",
                         }
                     ],
                     model="llama-3.1-70b-versatile",
