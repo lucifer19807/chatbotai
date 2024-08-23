@@ -31,6 +31,9 @@ if st.button('Submit'):
                         "mime_type": "image/jpeg",
                         "data": image_data
                     }
+                },
+                {
+                    "text": "Classify the image as either an animal, a plant, or something else."
                 }
             ]
         }
