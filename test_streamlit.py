@@ -18,13 +18,12 @@ if 'conversation' not in st.session_state:
 uploaded_file = st.file_uploader("Choose an image...", type="jpg")
 user_query = st.text_input("Enter your question about the image")
 
-language = st.selectbox("Select Language", ["English", "Hindi", "Bengali", "Telugu", "Marathi", "Tamil", "Gujarati", "Urdu"])
+language = st.selectbox("Select Language", ["English", "Hindi", "Punjabi", "Bengali", "Telugu", "Marathi", "Tamil", "Gujarati", "Urdu"])
 
 if st.button('Submit'):
     if uploaded_file is not None and user_query:
         image_data = uploaded_file.read()
 
-        
         classification_request = {
             "parts": [
                 {
@@ -63,7 +62,7 @@ if st.button('Submit'):
                     messages=[
                         {
                             "role": "user",
-                            "content": response.text + " what should be done to prevent or eliminate this in the context of the farmer /n",
+                            "content": response.text + " How can we help farmers prevent or eliminate this issue? Keep it concise for easy understanding.",
                         }
                     ],
                     model="llama-3.1-70b-versatile",
@@ -82,7 +81,8 @@ if st.button('Submit'):
                                 "Marathi": "mr",
                                 "Tamil": "ta",
                                 "Gujarati": "gu",
-                                "Urdu": "ur"
+                                "Urdu": "ur",
+                                "Punjabi": "pa"
                             }
                             translator = GoogleTranslator(source='en', target=language_codes[language])
                             decoded_response = translator.translate(decoded_response)
@@ -92,7 +92,7 @@ if st.button('Submit'):
 
                     st.session_state.conversation.append({
                         'user': user_query,
-                        'response': decoded_response + "\n \n \n" + value
+                        'response': decoded_response + "\n  \n \n" + value
                     })
 
                     st.write("Conversation History:")
