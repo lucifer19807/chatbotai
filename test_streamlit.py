@@ -37,7 +37,13 @@ if st.button('Submit'):
         }
         classification_response = model.generate_content(classification_request)
 
-        if "animal" in classification_response.text or "plant" in classification_response.text:
+        if ("animal" in classification_response.text or 
+            "plant" in classification_response.text or 
+            "pet" in classification_response.text or 
+            "flower" in classification_response.text or 
+            "tree" in classification_response.text or 
+            "bird" in classification_response.text or 
+            "insect" in classification_response.text):
             analysis_request = {
                 "parts": [
                     {
@@ -51,7 +57,6 @@ if st.button('Submit'):
                     }
                 ]
             }
-
             try:
                 response = model.generate_content(analysis_request)
                 chat_completion = llama_client.chat.completions.create(
